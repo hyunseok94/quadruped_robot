@@ -1,0 +1,211 @@
+<?xml version="1.0"?>
+<robot name="qbot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+    
+    <xacro:property name="wheel_diameter" value="0.07"/>
+    <xacro:property name="wheel_seperation" value="0.29" />
+
+    <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+    </material>
+    <material name="red">
+        <color rgba="0.8 0 0 1"/>
+    </material>
+    <material name="green">
+        <color rgba="0 0.8 0 1"/>
+    </material>
+    <material name="grey">
+        <color rgba="0.75 0.75 0.75 1"/>
+    </material>
+    <material name="white">
+        <color rgba="1.0 1.0 1.0 1"/>
+    </material>
+    <material name="black">
+        <color rgba="0 0 0 1"/>
+    </material>
+
+    <gazebo reference="BODY">
+      <material>Gazebo/Black</material>
+    </gazebo>
+
+    <link name="BODY">
+            <inertial>
+            <origin xyz="-0.038 0.0 -0.01" rpy="0 0 0"/>
+            <mass value="24.7"/>
+            <inertia 
+                ixx="0.34"
+                ixy="0.0"
+                ixz="0.0"
+                iyy="1.88"
+                iyz="0.0"
+                izz="1.98"/>
+            </inertial>
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="0.7 0.230 0.15"/>
+                </geometry>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+                <!--geometry>
+                    <box size="0.7 0.230 0.15"/>
+                </geometry-->
+            </collision>
+    </link>
+
+    <xacro:macro name="insert_leg" params="prefix dir_s dir_f">
+        <gazebo reference="${prefix}_HIP">
+          <material>Gazebo/White</material>
+      </gazebo>
+      <gazebo reference="${prefix}_THIGH">
+          <material>Gazebo/Red</material>
+      </gazebo>
+      <gazebo reference="${prefix}_CALF">
+          <material>Gazebo/Black</material>
+      </gazebo>
+      <gazebo reference="${prefix}_TIP">
+          <material>Gazebo/White</material>
+      </gazebo>
+
+    <link name="${prefix}_HIP">
+        <inertial>
+        <origin xyz="-0.0 ${dir_s*0.0029} 0.0" rpy="0 0 0"/>
+        <mass value="1.5346"/>
+         <inertia
+            ixx="0.001"
+            ixy="0.0"
+            ixz="0.0"
+            iyy="0.001"
+            iyz="0.0"
+            izz="0.001"/>
+        </inertial>
+        <visual>
+            <origin xyz="-0.0 ${dir_s*0.05} 0" rpy="1.570796 0 0.0"/>
+            <geometry>
+                <cylinder length="0.1" radius="0.05"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+                    <!-- <geometry>
+                        <cylinder length="0.05" radius="0.025"/>
+                    </geometry> -->
+        </collision>
+    </link>
+
+    <link name="${prefix}_THIGH">
+        <inertial>
+        <origin xyz="-0.0 ${-0.01*dir_s} -0.028" rpy="0 0 0"/>
+        <mass value="3.32"/>
+        <inertia 
+            ixx="0.025"
+            ixy="0.0"
+            ixz="0.0"
+            iyy="0.025"
+            iyz="0.0"
+            izz="0.0039"/>
+        </inertial>
+        <visual>
+            <origin xyz="-0.0 0.0 -0.1525" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="0.305" radius="0.02"/>
+            </geometry>
+            <material name="red"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+                    <!-- <geometry>
+                        <cylinder length="0.05" radius="0.025"/>
+                    </geometry> -->
+        </collision>
+    </link>
+
+    <link name="${prefix}_CALF">
+        <inertial>
+        <origin xyz="-0.0 0.0 -0.094" rpy="0 0 0"/>
+        <mass value="0.573"/>
+        <inertia 
+            ixx="0.004"
+            ixy="0.0"
+            ixz="0.0"
+            iyy="0.005"
+            iyz="0.0"
+            izz="0.0014"/>
+        </inertial>
+        <visual>
+            <origin xyz="0.0 0.0 -0.1545" rpy="0 0 0"/>
+            <geometry>
+                <cylinder length="0.309" radius="0.02"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+                    <!-- <geometry>
+                        <cylinder length="0.05" radius="0.025"/>
+                    </geometry> -->
+        </collision>
+    </link>
+
+    <link name="${prefix}_TIP">
+        <inertial>
+        <origin xyz="-0.0 0.0 0.0" rpy="0 0 0"/>
+        <mass value="0.1646"/>
+        <inertia 
+            ixx="0.00009"
+            ixy="0.0"
+            ixz="0.0"
+            iyy="0.00009"
+            iyz="0.0"
+            izz="0.00008"/>
+        </inertial>
+        <visual>
+            <origin xyz="-0.0 0.0 0.0" rpy="0 0 0"/>
+            <geometry>
+                <sphere radius="0.02"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <sphere radius="0.02"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="${prefix}_HR_JOINT" type="continuous">
+        <origin xyz="${dir_f*0.35} ${dir_s*0.115} -0.053" rpy="0 0 0"/>
+        <parent link="BODY"/>
+        <child link="${prefix}_HIP"/>
+        <axis xyz="1 0 0"/>
+    </joint>
+    <joint name="${prefix}_HP_JOINT" type="continuous">
+        <origin xyz="0.0 ${dir_s*0.105} 0" rpy="0 0 0"/>
+        <parent link="${prefix}_HIP"/>
+        <child link="${prefix}_THIGH"/>
+        <axis xyz="0 1 0"/>
+    </joint>
+    <joint name="${prefix}_KN_JOINT" type="continuous">
+        <origin xyz="0.0 0 -0.305" rpy="0 0 0"/>
+        <parent link="${prefix}_THIGH"/>
+        <child link="${prefix}_CALF"/>
+        <axis xyz="0 1 0"/>
+    </joint>
+    <joint name="${prefix}_TIP_JOINT" type="fixed">
+        <origin xyz="0.0 0 -0.309" rpy="0 0 0"/>
+        <parent link="${prefix}_CALF"/>
+        <child link="${prefix}_TIP"/>
+        <axis xyz="0 0 0"/>
+    </joint>
+
+</xacro:macro>
+
+ <xacro:insert_leg prefix="RL" dir_s="1" dir_f="-1"/>
+ <xacro:insert_leg prefix="RR" dir_s="-1" dir_f="-1"/>
+ <xacro:insert_leg prefix="FL" dir_s="1" dir_f="1"/>
+ <xacro:insert_leg prefix="FR" dir_s="-1" dir_f="1"/>
+
+</robot>

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+    <env name="GAZEBO_RESOURCE_PATH" value="$(find quadruped_robot_gazebo)"/>
+
+    <include file="$(find quadruped_robot_description)/launch/upload.launch"/>
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+	<arg name="paused" default="true"/>
+        <arg name="use_sim_time" value="true" />
+        <arg name="verbose" value="true"/>
+        <!--arg name="world_name" value="$(find quadruped_robot_gazebo)/worlds/default.world"/-->
+    </include>
+
+    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+            args="-urdf -model qbot -param robot_description -z 1.0"/>
+</launch>
