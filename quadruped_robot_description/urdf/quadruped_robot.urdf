@@ -41,9 +41,9 @@
 			</visual>
 			<collision>
 				<origin xyz="0 0 0" rpy="0 0 0"/>
-				<!--geometry>
+				<geometry>
 					<box size="0.7 0.230 0.15"/>
-				</geometry-->
+				</geometry>
 			</collision>
 	</link>
 
@@ -67,37 +67,37 @@
 			<material name="white"/>
 		</visual>
 		<collision>
-			<origin xyz="0 0 0" rpy="0 0 0"/>
-					<!-- <geometry>
-						<cylinder length="0.05" radius="0.025"/>
-					</geometry> -->
+			<origin xyz="0 0.05 0" rpy="1.570796 0 0"/>
+			<geometry>
+				<cylinder length="0.1" radius="0.05"/>
+			</geometry>
 		</collision>
 	</link>
 	<link name="RR_HIP">
 		<inertial>
-		<origin xyz="-0.0 -0.0029 0.0" rpy="0 0 0"/>
-		<mass value="1.5346"/>
-		<inertia 
-			ixx="0.001"
-			ixy="0.0"
-			ixz="0.0"
-			iyy="0.001"
-			iyz="0.0"
-			izz="0.001"/>
-		</inertial>
-		<visual>
-			<origin xyz="-0.0 -0.05 0" rpy="1.570796 0 0.0"/>
-			<geometry>
-				<cylinder length="0.1" radius="0.05"/>
-			</geometry>
-			<material name="white"/>
-		</visual>
-		<collision>
-			<origin xyz="0 0 0" rpy="0 0 0"/>
-					<!-- <geometry>
-						<cylinder length="0.05" radius="0.025"/>
-					</geometry> -->
-				</collision>
+			<origin xyz="-0.0 -0.0029 0.0" rpy="0 0 0"/>
+			<mass value="1.5346"/>
+			<inertia 
+				ixx="0.001"
+				ixy="0.0"
+				ixz="0.0"
+				iyy="0.001"
+				iyz="0.0"
+				izz="0.001"/>
+			</inertial>
+			<visual>
+				<origin xyz="-0.0 -0.05 0" rpy="1.570796 0 0.0"/>
+				<geometry>
+					<cylinder length="0.1" radius="0.05"/>
+				</geometry>
+				<material name="white"/>
+			</visual>
+			<collision>
+				<origin xyz="-0.0 -0.05 0" rpy="1.570796 0 0.0"/>
+				<geometry>
+					<cylinder length="0.1" radius="0.05"/>
+				</geometry>
+			</collision>
 	</link>
 	<link name="FL_HIP">
 		<inertial>
@@ -119,10 +119,10 @@
 			<material name="white"/>
 		</visual>
 		<collision>
-			<origin xyz="0 0 0" rpy="0 0 0"/>
-					<!-- <geometry>
-						<cylinder length="0.05" radius="0.025"/>
-					</geometry> -->
+			<origin xyz="-0.0 0.05 0" rpy="1.570796 0 0.0"/>
+			<geometry>
+				<cylinder length="0.1" radius="0.05"/>
+			</geometry>
 		</collision>
 	</link>
 	<link name="FR_HIP">
@@ -145,10 +145,10 @@
 			<material name="white"/>
 		</visual>
 		<collision>
-			<origin xyz="0 0 0" rpy="0 0 0"/>
-					<!-- <geometry>
-						<cylinder length="0.05" radius="0.025"/>
-					</geometry> -->
+			<origin xyz="-0.0 -0.05 0" rpy="1.570796 0 0.0"/>
+			<geometry>
+				<cylinder length="0.1" radius="0.05"/>
+			</geometry>
 		</collision>
 	</link>
 
@@ -172,10 +172,10 @@
 			<material name="red"/>
 		</visual>
 		<collision>
-			<origin xyz="0 0 0" rpy="0 0 0"/>
-					<!-- <geometry>
-						<cylinder length="0.05" radius="0.025"/>
-					</geometry> -->
+			<origin xyz="-0.0 0.0 -0.1525" rpy="0 0 0"/>
+			<geometry>
+				<cylinder length="0.305" radius="0.02"/>
+			</geometry>
 		</collision>
 	</link>
 	<link name="RR_THIGH">
@@ -199,10 +199,10 @@
 			<material name="red"/>
 		</visual>
 		<collision>
-			<origin xyz="0 0 0" rpy="0 0 0"/>
-					<!-- <geometry>
-						<cylinder length="0.05" radius="0.025"/>
-					</geometry> -->
+			<origin xyz="-0.0 0.0 -0.1525" rpy="0 0 0"/>
+			<geometry>
+				<cylinder length="0.305" radius="0.02"/>
+			</geometry>
 		</collision>
 	</link>
 	<link name="FL_THIGH">
@@ -225,10 +225,10 @@
 			<material name="red"/>
 		</visual>
 		<collision>
-			<origin xyz="0 0 0" rpy="0 0 0"/>
-					<!-- <geometry>
-						<cylinder length="0.05" radius="0.025"/>
-					</geometry> -->
+			<origin xyz="-0.0 0.0 -0.1525" rpy="0 0 0"/>
+			<geometry>
+				<cylinder length="0.305" radius="0.02"/>
+			</geometry>
 		</collision>
 	</link>
 	<link name="FR_THIGH">
@@ -251,10 +251,10 @@
 			<material name="red"/>
 		</visual>
 		<collision>
-			<origin xyz="0 0 0" rpy="0 0 0"/>
-					<!-- <geometry>
-						<cylinder length="0.05" radius="0.025"/>
-					</geometry> -->
+			<origin xyz="-0.0 0.0 -0.1525" rpy="0 0 0"/>
+			<geometry>
+				<cylinder length="0.309" radius="0.02"/>
+			</geometry>
 		</collision>
 	</link>
 
@@ -278,10 +278,10 @@
 			<material name="black"/>
 		</visual>
 		<collision>
-			<origin xyz="0 0 0" rpy="0 0 0"/>
-					<!-- <geometry>
-						<cylinder length="0.05" radius="0.025"/>
-					</geometry> -->
+			<origin xyz="-0.0 0.0 -0.1545" rpy="0 0 0"/>
+			<geometry>
+				<cylinder length="0.309" radius="0.02"/>
+			</geometry>
 		</collision>
 	</link>
 	<link name="RR_CALF">
@@ -304,10 +304,10 @@
 			<material name="black"/>
 		</visual>
 		<collision>
-			<origin xyz="0 0 0" rpy="0 0 0"/>
-					<!-- <geometry>
-						<cylinder length="0.05" radius="0.025"/>
-					</geometry> -->
+			<origin xyz="-0.0 0.0 -0.1545" rpy="0 0 0"/>
+			<geometry>
+				<cylinder length="0.309" radius="0.02"/>
+			</geometry>
 		</collision>
 	</link>
 	<link name="FL_CALF">
@@ -330,10 +330,10 @@
 			<material name="black"/>
 		</visual>
 		<collision>
-			<origin xyz="0 0 0" rpy="0 0 0"/>
-					<!-- <geometry>
-						<cylinder length="0.05" radius="0.025"/>
-					</geometry> -->
+			<origin xyz="-0.0 0.0 -0.1545" rpy="0 0 0"/>
+			<geometry>
+				<cylinder length="0.309" radius="0.02"/>
+			</geometry>
 		</collision>
 	</link>
 	<link name="FR_CALF">
@@ -356,10 +356,10 @@
 			<material name="black"/>
 		</visual>
 		<collision>
-			<origin xyz="0 0 0" rpy="0 0 0"/>
-					<!-- <geometry>
-						<cylinder length="0.05" radius="0.025"/>
-					</geometry> -->
+			<origin xyz="-0.0 0.0 -0.1545" rpy="0 0 0"/>
+			<geometry>
+				<cylinder length="0.309" radius="0.02"/>
+			</geometry>
 		</collision>
 	</link>
 
@@ -468,28 +468,28 @@
 		</collision>
 	</link>
 
-	<joint name="RL_HR_JOINT" type="continuous">
+	<joint name="1_RL_HR_JOINT" type="continuous">
 		<origin xyz="-0.35 0.115 -0.053" rpy="0 0 0"/>
 		<parent link="BODY"/>
 		<child link="RL_HIP"/>
 		<axis xyz="1 0 0"/>
 	</joint>
 
-	<joint name="RR_HR_JOINT" type="continuous">
+	<joint name="2_RR_HR_JOINT" type="continuous">
 		<origin xyz="-0.35 -0.115 -0.053" rpy="0 0 0"/>
 		<parent link="BODY"/>
 		<child link="RR_HIP"/>
 		<axis xyz="1 0 0"/>
 	</joint>
 
-	<joint name="FL_HR_JOINT" type="continuous">
+	<joint name="3_FL_HR_JOINT" type="continuous">
 		<origin xyz="0.35 0.115 -0.053" rpy="0 0 0"/>
 		<parent link="BODY"/>
 		<child link="FL_HIP"/>
 		<axis xyz="1 0 0"/>
 	</joint>
 
-	<joint name="FR_HR_JOINT" type="continuous">
+	<joint name="4_FR_HR_JOINT" type="continuous">
 		<origin xyz="0.35 -0.115 -0.053" rpy="0 0 0"/>
 		<parent link="BODY"/>
 		<child link="FR_HIP"/>

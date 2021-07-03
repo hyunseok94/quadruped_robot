@@ -1,0 +1,708 @@
+<sdf version='1.6'>
+  <model name='qbot'>
+     <joint name="fixed to ground" type="fixed">
+       <parent>world</parent>
+       <child>BODY</child>
+     </joint>
+
+    <link name='BODY'>
+      <pose frame=''>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>-0.038 0 -0.01 0 -0 0</pose>
+        <mass>24.7</mass>
+        <inertia>
+          <ixx>0.34</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>1.88</iyy>
+          <iyz>0</iyz>
+          <izz>1.98</izz>
+        </inertia>
+      </inertial>
+      <visual name='BODY_visual'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <geometry>
+          <box>
+            <size>0.7 0.23 0.15</size>
+          </box>
+        </geometry>
+	<material>
+          <ambient>97 97 97 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0 0 0 0</emissive>
+          <specular>0 0 0 0</specular>
+        </material>
+      </visual>
+	<sensor name='IMU' type='imu'>
+        <pose frame=''>0.0 0 -0.075 0 -0 0</pose>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type='none'></noise>
+              <!-- <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.5</stddev>
+              </noise> -->
+            </x>
+            <y>
+              <noise type='none'></noise>
+              <!-- <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.5</stddev>
+              </noise> -->
+            </y>
+            <z>
+              <noise type='none'></noise>
+              <!-- <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.5</stddev>
+              </noise> -->
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type='none'></noise>
+              <!-- <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.1</stddev>
+              </noise> -->
+            </x>
+            <y>
+              <noise type="none"></noise>
+              <!-- <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.1</stddev>
+              </noise> -->
+            </y>
+            <z>
+              <noise type='none'></noise>
+              <!-- <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.1</stddev>
+              </noise> -->
+            </z>
+          </linear_acceleration>
+        </imu>
+        <always_on>1</always_on>
+        <update_rate>1000</update_rate>
+        <visualize>true</visualize>
+      </sensor>
+    </link>
+    <link name='FL_HIP'>
+      <pose frame=''>0.35 0.115 -0.053 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>-0 0.0029 0 0 -0 0</pose>
+        <mass>1.5346</mass>
+        <inertia>
+          <ixx>0.001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0</iyz>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
+      <visual name='FL_HIP_visual'>
+        <pose frame=''>-0 0.05 0 1.5708 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.1</length>
+            <radius>0.05</radius>
+          </cylinder>
+        </geometry>
+	<material>
+          <ambient>213 0 0 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0 0 0 1</emissive>
+          <specular>0 0 0 0</specular>
+        </material>
+      </visual>
+    </link>
+    <joint name='FL_HR_JOINT' type='revolute'>
+      <child>FL_HIP</child>
+      <parent>BODY</parent>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='FL_THIGH'>
+      <pose frame=''>0.35 0.22 -0.053 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>-0 -0.01 -0.028 0 -0 0</pose>
+        <mass>3.32</mass>
+        <inertia>
+          <ixx>0.025</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.025</iyy>
+          <iyz>0</iyz>
+          <izz>0.0039</izz>
+        </inertia>
+      </inertial>
+      <visual name='FL_THIGH_visual'>
+        <pose frame=''>-0 0 -0.1525 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.305</length>
+            <radius>0.02</radius>
+          </cylinder>
+        </geometry>
+	<material>
+          <ambient>213 0 0 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0 0 0 1</emissive>
+          <specular>0 0 0 0</specular>
+        </material>
+      </visual>
+    </link>
+    <joint name='FL_HP_JOINT' type='revolute'>
+      <child>FL_THIGH</child>
+      <parent>FL_HIP</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='FL_CALF'>
+      <pose frame=''>0.35 0.22 -0.358 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>0 0 -0.141979 0 -0 0</pose>
+        <mass>0.7376</mass>
+        <inertia>
+          <ixx>0.0100007</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0110007</iyy>
+          <iyz>0</iyz>
+          <izz>0.00148</izz>
+        </inertia>
+      </inertial>
+      <collision name='FL_CALF_fixed_joint_lump__FL_TIP_collision'>
+        <pose frame=''>0 0 -0.309 0 -0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.02</radius>
+          </sphere>
+        </geometry>
+      </collision>
+      <visual name='FL_CALF_visual'>
+        <pose frame=''>-0 0 -0.1545 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.309</length>
+            <radius>0.02</radius>
+          </cylinder>
+        </geometry>
+	<material>
+          <ambient>33 33 33 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0 0 0 1</emissive>
+          <specular>0 0 0 0</specular>
+        </material>
+      </visual>
+      <visual name='FL_CALF_fixed_joint_lump__FL_TIP_visual_1'>
+        <pose frame=''>0 0 -0.309 0 -0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.02</radius>
+          </sphere>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='FL_KN_JOINT' type='revolute'>
+      <child>FL_CALF</child>
+      <parent>FL_THIGH</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='FR_HIP'>
+      <pose frame=''>0.35 -0.115 -0.053 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>-0 -0.0029 0 0 -0 0</pose>
+        <mass>1.5346</mass>
+        <inertia>
+          <ixx>0.001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0</iyz>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
+      <visual name='FR_HIP_visual'>
+        <pose frame=''>-0 -0.05 0 1.5708 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.1</length>
+            <radius>0.05</radius>
+          </cylinder>
+        </geometry>
+	<material>
+          <ambient>213 0 0 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0 0 0 1</emissive>
+          <specular>0 0 0 0</specular>
+        </material>
+      </visual>
+    </link>
+    <joint name='FR_HR_JOINT' type='revolute'>
+      <child>FR_HIP</child>
+      <parent>BODY</parent>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='FR_THIGH'>
+      <pose frame=''>0.35 -0.22 -0.053 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>-0 0.01 -0.028 0 -0 0</pose>
+        <mass>3.32</mass>
+        <inertia>
+          <ixx>0.025</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.025</iyy>
+          <iyz>0</iyz>
+          <izz>0.0039</izz>
+        </inertia>
+      </inertial>
+      <visual name='FR_THIGH_visual'>
+        <pose frame=''>-0 0 -0.1525 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.309</length>
+            <radius>0.02</radius>
+          </cylinder>
+        </geometry>
+	<material>
+          <ambient>213 0 0 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0 0 0 1</emissive>
+          <specular>0 0 0 0</specular>
+        </material>
+      </visual>
+    </link>
+    <joint name='FR_HP_JOINT' type='revolute'>
+      <child>FR_THIGH</child>
+      <parent>FR_HIP</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='FR_CALF'>
+      <pose frame=''>0.35 -0.22 -0.358 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>0 0 -0.141979 0 -0 0</pose>
+        <mass>0.7376</mass>
+        <inertia>
+          <ixx>0.0100007</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0110007</iyy>
+          <iyz>0</iyz>
+          <izz>0.00148</izz>
+        </inertia>
+      </inertial>
+      <collision name='FR_CALF_fixed_joint_lump__FR_TIP_collision'>
+        <pose frame=''>0 0 -0.309 0 -0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.02</radius>
+          </sphere>
+        </geometry>
+      </collision>
+      <visual name='FR_CALF_visual'>
+        <pose frame=''>-0 0 -0.1545 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.309</length>
+            <radius>0.02</radius>
+          </cylinder>
+        </geometry>
+	<material>
+          <ambient>33 33 33 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0 0 0 1</emissive>
+          <specular>0 0 0 0</specular>
+        </material>
+      </visual>
+      <visual name='FR_CALF_fixed_joint_lump__FR_TIP_visual_1'>
+        <pose frame=''>0 0 -0.309 0 -0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.02</radius>
+          </sphere>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='FR_KN_JOINT' type='revolute'>
+      <child>FR_CALF</child>
+      <parent>FR_THIGH</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='RL_HIP'>
+      <pose frame=''>-0.35 0.115 -0.053 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>-0 0.0029 0 0 -0 0</pose>
+        <mass>1.5346</mass>
+        <inertia>
+          <ixx>0.001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0</iyz>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
+      <visual name='RL_HIP_visual'>
+        <pose frame=''>-0 0.05 0 1.5708 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.1</length>
+            <radius>0.05</radius>
+          </cylinder>
+        </geometry>
+	<material>
+          <ambient>213 0 0 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0 0 0 1</emissive>
+          <specular>0 0 0 0</specular>
+        </material>
+      </visual>
+    </link>
+    <joint name='RL_HR_JOINT' type='revolute'>
+      <child>RL_HIP</child>
+      <parent>BODY</parent>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='RL_THIGH'>
+      <pose frame=''>-0.35 0.22 -0.053 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>-0 -0.01 -0.028 0 -0 0</pose>
+        <mass>3.32</mass>
+        <inertia>
+          <ixx>0.025</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.025</iyy>
+          <iyz>0</iyz>
+          <izz>0.0039</izz>
+        </inertia>
+      </inertial>
+      <visual name='RL_THIGH_visual'>
+        <pose frame=''>-0 0 -0.1525 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.305</length>
+            <radius>0.02</radius>
+          </cylinder>
+        </geometry>
+	<material>
+          <ambient>213 0 0 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0 0 0 1</emissive>
+          <specular>0 0 0 0</specular>
+        </material>
+      </visual>
+    </link>
+    <joint name='RL_HP_JOINT' type='revolute'>
+      <child>RL_THIGH</child>
+      <parent>RL_HIP</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='RL_CALF'>
+      <pose frame=''>-0.35 0.22 -0.358 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>0 0 -0.141979 0 -0 0</pose>
+        <mass>0.7376</mass>
+        <inertia>
+          <ixx>0.0100007</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0110007</iyy>
+          <iyz>0</iyz>
+          <izz>0.00148</izz>
+        </inertia>
+      </inertial>
+      <collision name='RL_CALF_fixed_joint_lump__RL_TIP_collision'>
+        <pose frame=''>0 0 -0.309 0 -0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.02</radius>
+          </sphere>
+        </geometry>
+      </collision>
+      <visual name='RL_CALF_visual'>
+        <pose frame=''>-0 0 -0.1545 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.309</length>
+            <radius>0.02</radius>
+          </cylinder>
+        </geometry>
+	<material>
+          <ambient>33 33 33 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0 0 0 1</emissive>
+          <specular>0 0 0 0</specular>
+        </material>
+      </visual>
+      <visual name='RL_CALF_fixed_joint_lump__RL_TIP_visual_1'>
+        <pose frame=''>0 0 -0.309 0 -0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.02</radius>
+          </sphere>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='RL_KN_JOINT' type='revolute'>
+      <child>RL_CALF</child>
+      <parent>RL_THIGH</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='RR_HIP'>
+      <pose frame=''>-0.35 -0.115 -0.053 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>-0 -0.0029 0 0 -0 0</pose>
+        <mass>1.5346</mass>
+        <inertia>
+          <ixx>0.001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0</iyz>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
+      <visual name='RR_HIP_visual'>
+        <pose frame=''>-0 -0.05 0 1.5708 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.1</length>
+            <radius>0.05</radius>
+          </cylinder>
+        </geometry>
+	<material>
+          <ambient>213 0 0 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0 0 0 1</emissive>
+          <specular>0 0 0 0</specular>
+        </material>
+      </visual>
+    </link>
+    <joint name='RR_HR_JOINT' type='revolute'>
+      <child>RR_HIP</child>
+      <parent>BODY</parent>
+      <axis>
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='RR_THIGH'>
+      <pose frame=''>-0.35 -0.22 -0.053 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>-0 0.01 -0.028 0 -0 0</pose>
+        <mass>3.32</mass>
+        <inertia>
+          <ixx>0.025</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.025</iyy>
+          <iyz>0</iyz>
+          <izz>0.0039</izz>
+        </inertia>
+      </inertial>
+      <visual name='RR_THIGH_visual'>
+        <pose frame=''>-0 0 -0.1525 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.305</length>
+            <radius>0.02</radius>
+          </cylinder>
+        </geometry>
+	<material>
+          <ambient>213 0 0 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0 0 0 1</emissive>
+          <specular>0 0 0 0</specular>
+        </material>
+      </visual>
+    </link>
+    <joint name='RR_HP_JOINT' type='revolute'>
+      <child>RR_THIGH</child>
+      <parent>RR_HIP</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+    <link name='RR_CALF'>
+      <pose frame=''>-0.35 -0.22 -0.358 0 -0 0</pose>
+      <inertial>
+        <pose frame=''>0 0 -0.141979 0 -0 0</pose>
+        <mass>0.7376</mass>
+        <inertia>
+          <ixx>0.0100007</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0110007</iyy>
+          <iyz>0</iyz>
+          <izz>0.00148</izz>
+        </inertia>
+      </inertial>
+      <collision name='RR_CALF_fixed_joint_lump__RR_TIP_collision'>
+        <pose frame=''>0 0 -0.309 0 -0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.02</radius>
+          </sphere>
+        </geometry>
+      </collision>
+      <visual name='RR_CALF_visual'>
+        <pose frame=''>-0 0 -0.1545 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.309</length>
+            <radius>0.02</radius>
+          </cylinder>
+        </geometry>
+	<material>
+          <ambient>33 33 33 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+          <emissive>0 0 0 1</emissive>
+          <specular>0 0 0 0</specular>
+        </material>
+      </visual>
+      <visual name='RR_CALF_fixed_joint_lump__RR_TIP_visual_1'>
+        <pose frame=''>0 0 -0.309 0 -0 0</pose>
+        <geometry>
+          <sphere>
+            <radius>0.02</radius>
+          </sphere>
+        </geometry>
+      </visual>
+    </link>
+    <joint name='RR_KN_JOINT' type='revolute'>
+      <child>RR_CALF</child>
+      <parent>RR_THIGH</parent>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <use_parent_model_frame>1</use_parent_model_frame>
+      </axis>
+    </joint>
+  </model>
+</sdf>
