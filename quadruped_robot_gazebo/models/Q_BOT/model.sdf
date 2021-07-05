@@ -201,6 +201,29 @@
             <radius>0.02</radius>
           </sphere>
         </geometry>
+	<surface>
+          <bounce>
+            <restitution_coefficient> 0 </restitution_coefficient>
+          </bounce>
+          <friction>
+            <ode>
+               <mu>  1  </mu>
+              <mu2> 1  </mu2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <!-- <soft_erp> 0.1 </soft_erp>
+              <soft_cfm> 1E-4 </soft_cfm> -->
+              <kp>5000000</kp>
+              <kd>5000</kd> -->
+               <max_vel>0.1</max_vel>
+              <!-- <max_vel>0.01</max_vel> -->
+               <min_depth>0.0001</min_depth>
+              <!-- <min_depth>0.0</min_depth> -->
+            </ode>
+          </contact>
+        </surface>
       </collision>
       <visual name='FL_CALF_visual'>
         <pose frame=''>-0 0 -0.1545 0 -0 0</pose>
@@ -355,6 +378,29 @@
             <radius>0.02</radius>
           </sphere>
         </geometry>
+	<surface>
+          <bounce>
+            <restitution_coefficient> 0 </restitution_coefficient>
+          </bounce>
+          <friction>
+            <ode>
+               <mu>  1  </mu>
+              <mu2> 1  </mu2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <!-- <soft_erp> 0.1 </soft_erp>
+              <soft_cfm> 1E-4 </soft_cfm> -->
+              <kp>5000000</kp>
+              <kd>5000</kd> -->
+               <max_vel>0.1</max_vel>
+              <!-- <max_vel>0.01</max_vel> -->
+               <min_depth>0.0001</min_depth>
+              <!-- <min_depth>0.0</min_depth> -->
+            </ode>
+          </contact>
+        </surface>
       </collision>
       <visual name='FR_CALF_visual'>
         <pose frame=''>-0 0 -0.1545 0 -0 0</pose>
@@ -509,6 +555,29 @@
             <radius>0.02</radius>
           </sphere>
         </geometry>
+	<surface>
+          <bounce>
+            <restitution_coefficient> 0 </restitution_coefficient>
+          </bounce>
+          <friction>
+            <ode>
+               <mu>  1  </mu>
+              <mu2> 1  </mu2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <!-- <soft_erp> 0.1 </soft_erp>
+              <soft_cfm> 1E-4 </soft_cfm> -->
+              <kp>5000000</kp>
+              <kd>5000</kd> -->
+               <max_vel>0.1</max_vel>
+              <!-- <max_vel>0.01</max_vel> -->
+               <min_depth>0.0001</min_depth>
+              <!-- <min_depth>0.0</min_depth> -->
+            </ode>
+          </contact>
+        </surface>
       </collision>
       <visual name='RL_CALF_visual'>
         <pose frame=''>-0 0 -0.1545 0 -0 0</pose>
@@ -663,6 +732,29 @@
             <radius>0.02</radius>
           </sphere>
         </geometry>
+	<surface>
+          <bounce>
+            <restitution_coefficient> 0 </restitution_coefficient>
+          </bounce>
+          <friction>
+            <ode>
+               <mu>  1  </mu>
+              <mu2> 1  </mu2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <!-- <soft_erp> 0.1 </soft_erp>
+              <soft_cfm> 1E-4 </soft_cfm> -->
+              <kp>5000000</kp>
+              <kd>5000</kd> -->
+               <max_vel>0.1</max_vel>
+              <!-- <max_vel>0.01</max_vel> -->
+               <min_depth>0.0001</min_depth>
+              <!-- <min_depth>0.0</min_depth> -->
+            </ode>
+          </contact>
+        </surface>
       </collision>
       <visual name='RR_CALF_visual'>
         <pose frame=''>-0 0 -0.1545 0 -0 0</pose>

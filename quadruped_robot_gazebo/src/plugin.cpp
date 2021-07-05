@@ -212,10 +212,17 @@ void gazebo::qrobot_plugin::UpdateAlgorithm(void)
 		break;
 
 		case CTRLMODE_INIT_POSE:
-		printf("CTRLMODE_INIT_POSE\n");
-		Qbot.ResetTraj();
-		Qbot.CommandFlag=GOTO_INIT_POSE;
-		Qbot.ControlMode=CTRLMODE_NONE;
+			printf("CTRLMODE_INIT_POSE\n");
+			Qbot.ResetTraj();
+			Qbot.CommandFlag=GOTO_INIT_POSE;
+			Qbot.ControlMode=CTRLMODE_NONE;
+		break;
+
+		case CTRLMODE_WALK_READY:
+			printf("CTRLMODE_HOME_POSE\n");
+			Qbot.ResetTraj();
+			Qbot.CommandFlag=GOTO_WALK_READY;
+			Qbot.ControlMode=CTRLMODE_NONE;
 		break;
 	}
 
@@ -224,9 +231,15 @@ void gazebo::qrobot_plugin::UpdateAlgorithm(void)
 		break;
 
 		case GOTO_INIT_POSE:
-		Qbot.StateUpdate();
-		Qbot.Init_Pose_Traj();
-		Qbot.ComputeTorqueControl();
+			Qbot.StateUpdate();
+			Qbot.Init_Pose_Traj();
+			Qbot.ComputeTorqueControl();
+		break;
+
+		case GOTO_WALK_READY:
+			Qbot.StateUpdate();
+			Qbot.WalkReady_Pose_Traj();
+			Qbot.ComputeTorqueControl();
 		break;
 	}
 

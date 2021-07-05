@@ -40,8 +40,15 @@ struct POSITION{
  double init;
  double ref;
  double goal;
- double kp;
- double kd;
+};
+
+struct POSITION3D{
+ Eigen::Vector3d prev;
+ Eigen::Vector3d now;
+
+ Eigen::Vector3d init;
+ Eigen::Vector3d ref;
+ Eigen::Vector3d goal;
 };
 
 struct ROLL{
@@ -79,9 +86,17 @@ struct VELOCITY{
  double init;
  double ref;
  double goal;
- double kp;
- double kd;
 };
+
+struct VELOCITY3D{
+ Eigen::Vector3d prev;
+ Eigen::Vector3d now;
+
+ Eigen::Vector3d init;
+ Eigen::Vector3d ref;
+ Eigen::Vector3d goal;
+};
+
 
 struct ACCELERATION{
  double prev;
@@ -90,6 +105,27 @@ struct ACCELERATION{
  double init;
  double ref;
  double goal;
+};
+
+struct ACCELERATION3D{
+ Eigen::Vector3d prev;
+ Eigen::Vector3d now;
+
+ Eigen::Vector3d init;
+ Eigen::Vector3d ref;
+ Eigen::Vector3d goal;
+};
+
+struct LOCAL{
+	struct POSITION3D pos;
+	struct VELOCITY3D vel;
+	struct ACCELERATION3D acc;
+};
+
+struct GLOBAL{
+	struct POSITION3D pos;
+	struct VELOCITY3D vel;
+	struct ACCELERATION3D acc;
 };
 
 struct TORQUE{
@@ -107,33 +143,39 @@ struct JOINT{
 	struct POSITION pos;
 	struct VELOCITY vel;
 	struct ACCELERATION acc;
-};
-
-struct GAIN{
 	double kp;
-	double kd;
-	double kp_EP;
-	double kd_EP;
+ 	double kd;
 };
 
 struct BASE{
 	int ID;
-	struct POSITION pos;
-	struct VELOCITY vel;
-	struct ACCELERATION acc;
+	struct POSITION3D pos;
+	struct VELOCITY3D vel;
+	struct ACCELERATION3D acc;
 	struct ORIENTATION ori;
 };
 
 struct EP{
 	int ID;
-	struct POSITION pos;
-	struct VELOCITY vel;
-	struct ACCELERATION acc;
+	struct LOCAL local;
+	struct GLOBAL global;
+	Eigen::Matrix3d kp;
+ 	Eigen::Matrix3d kd;
+ 	Eigen::Matrix3d Jac;
+};
+
+struct INIT{		
+	double cycle;
+};
+
+struct READY{
+	double cycle;
 };
 
 struct TRAJ{
 	unsigned int cnt;
-	double cycle;
+	struct INIT init;
+	struct READY ready;
 };
 
 struct RBDL{
@@ -147,14 +189,23 @@ struct RBDL{
     RigidBodyDynamics::Math::VectorNd JointState;
     RigidBodyDynamics::Math::VectorNd JointStateDot;
     RigidBodyDynamics::Math::VectorNd JointState2Dot;
+    RigidBodyDynamics::Math::VectorNd EPState;
+    RigidBodyDynamics::Math::VectorNd EPStateDot;
+    RigidBodyDynamics::Math::VectorNd EPState2Dot;
 
+    RigidBodyDynamics::Math::VectorNd JointState_ref;
+    RigidBodyDynamics::Math::VectorNd JointStateDot_ref;
+    RigidBodyDynamics::Math::VectorNd JointState2Dot_ref;
+    RigidBodyDynamics::Math::VectorNd EPState_ref;
+    RigidBodyDynamics::Math::VectorNd EPStateDot_ref;
+    RigidBodyDynamics::Math::VectorNd EPState2Dot_ref;
 };
+
 
 class QRobot{
 public:
 	
 	JOINT* joint;
-	GAIN* gain; 
 	TRAJ Traj;
 	RBDL rbdl;
 	BASE Base;
@@ -167,14 +218,19 @@ public:
 	~QRobot();
 	void paramReset(void);
 	void ComputeTorqueControl(void);
-	VectorXd Joint_PD_Controller(void);
+	VectorNd Joint_PD_Controller(void);
+	VectorNd Task_PD_Controller(void);
+	VectorNd FK(VectorNd);
 	void ResetTraj(void);
 	void Init_Pose_Traj(void);
-	
+	void WalkReady_Pose_Traj(void);
+
+
 	void setRobotModel(Model* getModel);
 	void StateUpdate(void);
 
 	VectorXd joint_control_value=VectorXd::Zero(nDOF);
+	VectorXd Task_control_value=VectorXd::Zero(nDOF);
 	VectorXd CTC_Torque=VectorXd::Zero(nDOF);
 	MatrixNd J_A=MatrixNd::Zero(12,12);
 	//MatrixNd M_term = MatrixNd::Zero(18, 18);
