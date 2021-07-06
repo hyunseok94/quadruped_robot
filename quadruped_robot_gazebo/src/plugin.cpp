@@ -1,4 +1,4 @@
-#include <gazebo/common/common.hh>
+// #include <gazebo/common/common.hh>
 #include <gazebo/common/Plugin.hh>
 #include <ros/ros.h>
 #include <boost/bind.hpp>
@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include <std_msgs/Float64MultiArray.h>
+#include <std_msgs/UInt16.h>
 #include "QRobot.h" 
 
 
@@ -58,20 +59,31 @@ namespace gazebo
 	physics::JointPtr FR_KN_JOINT;
 	physics::JointPtr FR_TIP_JOINT;
 
+	sensors::SensorPtr Sensor;
+    sensors::ImuSensorPtr IMU;
+
 	event::ConnectionPtr update_connection;
 	ros::NodeHandle nh;
 	ros::Publisher P_data;
 	std_msgs::Float64MultiArray m_data;
+	ros::Subscriber server_sub;
 
 	QRobot Qbot;
-	double actual_pos[12]={0,0,0,0,0,0,0,0,0,0,0,0};
+	
 	public:
 	void Load(physics::ModelPtr _model, sdf::ElementPtr /*_sdf*/);	
 	void UpdateAlgorithm(void);
+	void SensorSetting(void);
+	void RBDLSetting(void);
+	void InitROSCOMM(void);
 	void GetJoints(void);
 	void GetLinks(void);
 	void EncoderRead(void);
+	void IMUSensorRead(void);
 	void jointController(void);
+	void Callback(const std_msgs::UInt16 &msg);
+	
+
 	private :
  };
  GZ_REGISTER_MODEL_PLUGIN(qrobot_plugin);
@@ -124,6 +136,16 @@ void gazebo::qrobot_plugin::GetJoints(){
 	this->FR_TIP_JOINT = this->model->GetJoint("FR_TIP_JOINT");
 }
 
+void gazebo::qrobot_plugin::SensorSetting(){
+	this->Sensor = sensors::get_sensor("IMU");
+    this->IMU = std::dynamic_pointer_cast<sensors::ImuSensor>(Sensor);
+}
+
+void gazebo::qrobot_plugin::RBDLSetting(){
+	Addons::URDFReadFromFile("/home/hyunseok/catkin_ws/src/quadruped_robot/quadruped_robot_description/urdf/quadruped_robot.urdf", qbot_model, true, true);
+    Qbot.setRobotModel(qbot_model);
+}
+
 void gazebo::qrobot_plugin::EncoderRead()
 {
     //************************** Encoder ********************************//
@@ -150,6 +172,29 @@ void gazebo::qrobot_plugin::EncoderRead()
     	Qbot.joint[i].pos.prev=Qbot.joint[i].pos.now;
     	Qbot.joint[i].vel.prev=Qbot.joint[i].vel.now;
     }
+}
+
+void gazebo::qrobot_plugin::IMUSensorRead()
+{
+    Qbot.CoM.ori.euler.vel.now(0) = this->IMU->AngularVelocity(false)[0];
+    Qbot.CoM.ori.euler.vel.now(1) = this->IMU->AngularVelocity(false)[1];
+    Qbot.CoM.ori.euler.vel.now(2) = this->IMU->AngularVelocity(false)[2];
+    Qbot.CoM.ori.euler.pos.now = Qbot.CoM.ori.euler.pos.now + Qbot.CoM.ori.euler.vel.now*dt;
+    
+    Qbot.CoM.acc.now(0) =this->IMU->LinearAcceleration(false)[0];
+    Qbot.CoM.acc.now(1) =this->IMU->LinearAcceleration(false)[1];
+    Qbot.CoM.acc.now(2) =this->IMU->LinearAcceleration(false)[2];
+
+    Qbot.getRotationMatrix();
+
+    // cout<<Qbot.CoM.ori.euler.R.now<<endl;
+    // cout<<"-----"<<endl;
+
+    // cout<<Qbot.CoM.ori.euler.pos.now.transpose()<<endl;
+    // cout<<Qbot.CoM.ori.euler.vel.now.transpose()<<endl;
+    // cout<<Qbot.CoM.acc.now.transpose()<<endl;
+    // cout<<"---"<<endl;
+
 }
 
 void gazebo::qrobot_plugin::jointController()
@@ -192,10 +237,9 @@ void gazebo::qrobot_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_sd
 
     GetLinks();
     GetJoints();
-
-    Addons::URDFReadFromFile("/home/hyunseok/catkin_ws/src/quadruped_robot/quadruped_robot_description/urdf/quadruped_robot.urdf", qbot_model, true, true);
-    Qbot.setRobotModel(qbot_model);
-	
+    SensorSetting();
+    RBDLSetting();
+    InitROSCOMM();
     P_data = nh.advertise<std_msgs::Float64MultiArray>("ROS_DATA", 1);
     m_data.data.resize(10);
     this->update_connection = event::Events::ConnectWorldUpdateBegin(boost::bind(&qrobot_plugin::UpdateAlgorithm, this));
@@ -205,7 +249,9 @@ void gazebo::qrobot_plugin::UpdateAlgorithm(void)
 {  
 	
 	EncoderRead();
+	IMUSensorRead();
 	
+
 	switch (Qbot.ControlMode){
 		case CTRLMODE_NONE:
 		
@@ -244,4 +290,16 @@ void gazebo::qrobot_plugin::UpdateAlgorithm(void)
 	}
 
 	jointController();
+}
+
+void gazebo::qrobot_plugin::Callback(const std_msgs::UInt16 &msg){
+	if(msg.data==0){
+		if(Qbot.Traj.move_done_flag==true){
+			Qbot.ControlMode=CTRLMODE_WALK_READY;
+		}
+	}
+}
+
+void gazebo::qrobot_plugin::InitROSCOMM(){
+	    server_sub = nh.subscribe("/Mode", 1, &gazebo::qrobot_plugin::Callback, this);
 }

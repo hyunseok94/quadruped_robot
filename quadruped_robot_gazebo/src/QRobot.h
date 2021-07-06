@@ -20,6 +20,7 @@ using namespace std;
 using namespace RigidBodyDynamics;
 using namespace RigidBodyDynamics::Math;
 
+
 enum CONTROL_MODE {
 	CTRLMODE_NONE = 0,
 	CTRLMODE_INIT_POSE,
@@ -51,34 +52,6 @@ struct POSITION3D{
  Eigen::Vector3d goal;
 };
 
-struct ROLL{
-	double now;
-	double ref;
-	double goal;
-};
-
-struct PITCH{
-	double now;
-	double ref;
-	double init;
-	double goal;
-};
-
-struct YAW{
-	double now;
-	double ref;
-	double init;
-	double goal;
-};
-
-struct ORIENTATION{
-	struct ROLL roll;
-	struct PITCH pitch;
-	struct YAW yaw;
-	Quaternion quat_ref;
-	Quaternion quat_now;
-};
-
 struct VELOCITY{
  double prev;
  double now;
@@ -96,7 +69,6 @@ struct VELOCITY3D{
  Eigen::Vector3d ref;
  Eigen::Vector3d goal;
 };
-
 
 struct ACCELERATION{
  double prev;
@@ -116,10 +88,66 @@ struct ACCELERATION3D{
  Eigen::Vector3d goal;
 };
 
+struct QUAT_POSITION{
+	Quaternion prev;
+ 	Quaternion now;
+
+ 	Quaternion init;
+ 	Quaternion ref;
+ 	Quaternion goal;
+};
+
+struct QUAT_VELOCITY{
+	Quaternion prev;
+ 	Quaternion now;
+
+ 	Quaternion init;
+ 	Quaternion ref;
+ 	Quaternion goal;
+};
+
+struct QUAT_ACCELERATION{
+	Quaternion prev;
+ 	Quaternion now;
+
+ 	Quaternion init;
+ 	Quaternion ref;
+ 	Quaternion goal;
+};
+
+struct ROLL{
+	Eigen::Matrix3d ref;
+	Eigen::Matrix3d now;
+};
+
+struct PITCH{
+	Eigen::Matrix3d ref;
+	Eigen::Matrix3d now;
+};
+
+struct YAW{
+	Eigen::Matrix3d ref;
+	Eigen::Matrix3d now;
+};
+
+struct ROTATION_MATRIX{
+	Eigen::Matrix3d ref;
+	Eigen::Matrix3d now;
+	struct ROLL roll;
+	struct PITCH pitch;
+	struct YAW yaw;
+};
+
+struct SEMI{
+	struct POSITION3D pos;
+	struct VELOCITY3D vel;
+};
+
 struct LOCAL{
 	struct POSITION3D pos;
 	struct VELOCITY3D vel;
 	struct ACCELERATION3D acc;
+	struct SEMI semi;
 };
 
 struct GLOBAL{
@@ -127,6 +155,26 @@ struct GLOBAL{
 	struct VELOCITY3D vel;
 	struct ACCELERATION3D acc;
 };
+
+struct EULER{
+	struct POSITION3D pos;
+	struct VELOCITY3D vel;
+	struct ACCELERATION3D acc;
+	struct ROTATION_MATRIX R;
+};
+
+struct QUATERNION{
+	struct QUAT_POSITION pos;
+	struct QUAT_VELOCITY vel;
+	struct QUAT_ACCELERATION acc;
+	struct ROTATION_MATRIX R;
+};
+
+struct ORIENTATION{
+	struct EULER euler;
+	struct QUATERNION quat;
+};
+
 
 struct TORQUE{
  double now;
@@ -155,6 +203,14 @@ struct BASE{
 	struct ORIENTATION ori;
 };
 
+struct COM{
+	int ID;
+	struct POSITION3D pos;
+	struct VELOCITY3D vel;
+	struct ACCELERATION3D acc;
+	struct ORIENTATION ori;
+};
+
 struct EP{
 	int ID;
 	struct LOCAL local;
@@ -176,6 +232,8 @@ struct TRAJ{
 	unsigned int cnt;
 	struct INIT init;
 	struct READY ready;
+	bool move_done_flag;
+	bool move_stop_flag;
 };
 
 struct RBDL{
@@ -209,6 +267,7 @@ public:
 	TRAJ Traj;
 	RBDL rbdl;
 	BASE Base;
+	COM CoM;
 	EP RL,RR,FL,FR;
 
 	enum CONTROL_MODE ControlMode;
@@ -222,12 +281,16 @@ public:
 	VectorNd Task_PD_Controller(void);
 	VectorNd FK(VectorNd);
 	void ResetTraj(void);
-	void Init_Pose_Traj(void);
-	void WalkReady_Pose_Traj(void);
-
 
 	void setRobotModel(Model* getModel);
 	void StateUpdate(void);
+	void getRotationMatrix(void);
+
+	void Init_Pose_Traj(void);
+	void WalkReady_Pose_Traj(void);
+
+	VectorNd getCOMpos(VectorNd,MatrixNd);
+	VectorNd getBASEpos(VectorNd,MatrixNd);
 
 	VectorXd joint_control_value=VectorXd::Zero(nDOF);
 	VectorXd Task_control_value=VectorXd::Zero(nDOF);
@@ -236,6 +299,7 @@ public:
 	//MatrixNd M_term = MatrixNd::Zero(18, 18);
     VectorNd G_term = VectorNd::Zero(12);
     VectorNd C_term = VectorNd::Zero(12);
+    Eigen::Vector3d offset_B2C=Eigen::Vector3d::Zero();
 private:
 };
 #endif 

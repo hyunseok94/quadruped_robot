@@ -6,8 +6,8 @@ QRobot::QRobot() {
 	joint = new JOINT[nDOF]; 
 	
 	//ControlMode=CTRLMODE_NONE;
-	//ControlMode=CTRLMODE_INIT_POSE;
-	ControlMode=CTRLMODE_WALK_READY;
+	ControlMode=CTRLMODE_INIT_POSE;
+	//ControlMode=CTRLMODE_WALK_READY;
 
 	paramReset();
 }
@@ -17,6 +17,9 @@ QRobot::~QRobot() {
 }
 
 void QRobot::paramReset(void){
+	
+	offset_B2C<<-0.05, 0.0, -0.0;
+
 	for (int i=0;i<nDOF;i++){
 		joint[i].pos.now=0.0;
 		joint[i].pos.prev=0.0;
@@ -27,6 +30,13 @@ void QRobot::paramReset(void){
 		joint[i].vel.ref=0.0;
 	}
 
+	Base.pos.ref<<0.0, 0.0, 0.45;
+	CoM.pos.ref<<0.0, 0.0, 0.45;
+
+	CoM.ori.euler.pos.ref<<0.,0.,0.;
+	CoM.ori.euler.pos.now<<0.,0.,0.;
+	CoM.ori.euler.vel.now<<0.,0.,0.;
+
 	for (int i=0; i<4; i++){
 		joint[3*i+0].kp=400;
 		joint[3*i+1].kp=200;
@@ -36,8 +46,6 @@ void QRobot::paramReset(void){
 		joint[3*i+1].kd=10;
 		joint[3*i+2].kd=10;
 	}
-
-	Base.pos.ref<<0.0,0.0,0.45;
 
 	RL.kp<<2000,0,0\
 		   ,0,2000,0\
@@ -66,27 +74,16 @@ void QRobot::paramReset(void){
 	FR.kd<<70,0,0\
 		   ,0,70,0\
 		   ,0,0,50;
+	Traj.move_done_flag=true;
+	//Traj.move_stop_flag=false;
 }
 
 
 void QRobot::ComputeTorqueControl(void){
-	
 	VectorNd tmp_hatNonLinearEffects = VectorNd::Zero(18);
     VectorNd tmp_G_term = VectorNd::Zero(18);
     VectorNd tmp_C_term = VectorNd::Zero(18);
-	
-	// CalcPointJacobian6D(*rbdl.pModel, rbdl.RobotState, Base.ID, rbdl.BaseState.segment(0,3), tmp_J_BASE, true);	
- //    CalcPointJacobian(*rbdl.pModel, rbdl.RobotState, RL.ID, Eigen::Vector3d::Zero(), tmp_J_RL, true);
- //    CalcPointJacobian(*rbdl.pModel, rbdl.RobotState, RR.ID, Eigen::Vector3d::Zero(), tmp_J_RR, true);
- //    CalcPointJacobian(*rbdl.pModel, rbdl.RobotState, FL.ID, Eigen::Vector3d::Zero(), tmp_J_FL, true);
- //    CalcPointJacobian(*rbdl.pModel, rbdl.RobotState, FR.ID, Eigen::Vector3d::Zero(), tmp_J_FR, true);
 
- //    J_A.block(0,0,3,3)=tmp_J_RL.block(0,6,3,3);
- //    J_A.block(3,3,3,3)=tmp_J_RR.block(0,9,3,3);
- //    J_A.block(6,6,3,3)=tmp_J_FL.block(0,12,3,3);
- //    J_A.block(9,9,3,3)=tmp_J_FR.block(0,15,3,3);
-    
-  	//CompositeRigidBodyAlgorithm(*rbdl.pModel, rbdl.RobotState, M_term, true);
     NonlinearEffects(*rbdl.pModel, rbdl.RobotState, rbdl.RobotStateDot, tmp_hatNonLinearEffects);
     NonlinearEffects(*rbdl.pModel, rbdl.RobotState, VectorNd::Zero(rbdl.pModel->dof_count), tmp_G_term);
     tmp_C_term = tmp_hatNonLinearEffects - tmp_G_term;
@@ -94,16 +91,17 @@ void QRobot::ComputeTorqueControl(void){
     C_term=tmp_C_term.segment(6,12);
     G_term=tmp_G_term.segment(6,12);
 
-
-    joint_control_value=Joint_PD_Controller();
-    Task_control_value=Task_PD_Controller();
-
-    //CTC_Torque=G_term+C_term+joint_control_value+Task_control_value;
-    CTC_Torque=G_term+C_term+J_A.transpose()*(Task_control_value);
+    if(CommandFlag==GOTO_INIT_POSE){
+    	joint_control_value=Joint_PD_Controller();	
+    	Task_control_value=VectorNd::Zero(12);
+    }else{
+    	Task_control_value=Task_PD_Controller();	
+    	joint_control_value=VectorNd::Zero(12);
+    }
+    CTC_Torque=G_term+C_term+joint_control_value+J_A.transpose()*(Task_control_value);
 	//cout<<"CTC:"<<CTC_Torque.transpose()<<endl;
 	//cout<<"---"<<endl;
 	for (int i = 0; i < nDOF; i++) {
-		//joint[i].torque.ref = CTC_Torque(6 + i);
 		joint[i].torque.ref = CTC_Torque(i);
 	}
 }
@@ -148,8 +146,8 @@ void QRobot::setRobotModel(Model* getModel){
 	rbdl.EPStateDot_ref=VectorNd::Zero(12);
 	rbdl.EPState2Dot_ref=VectorNd::Zero(12);
 
-	Base.ori.quat_ref<<0.0,0.0,0.0,1.0;
-	rbdl.pModel->SetQuaternion(Base.ID,Base.ori.quat_ref,rbdl.RobotState);
+	Base.ori.quat.pos.ref<<0.,0.,0.,1.;
+	rbdl.pModel->SetQuaternion(Base.ID,Base.ori.quat.pos.ref,rbdl.RobotState);
 
 	cout << endl << "Set Robot Model End !!" << endl;
 }
@@ -200,8 +198,8 @@ void QRobot::StateUpdate(void){
 		rbdl.RobotState2Dot(i+6)=rbdl.JointState2Dot(i);	
 	}
 	
-	Base.ori.quat_ref<<0.0,0.0,0.0,1.0;
-	rbdl.pModel->SetQuaternion(Base.ID,Base.ori.quat_ref,rbdl.RobotState);
+	Base.ori.quat.pos.ref<<0.,0.,0.,1.;
+	rbdl.pModel->SetQuaternion(Base.ID,Base.ori.quat.pos.ref,rbdl.RobotState);
 	
 	CalcPointJacobian6D(*rbdl.pModel, rbdl.RobotState, Base.ID, rbdl.BaseState.segment(0,3), tmp_J_BASE, true);	
     CalcPointJacobian(*rbdl.pModel, rbdl.RobotState, RL.ID, Eigen::Vector3d::Zero(), tmp_J_RL, true);
@@ -243,7 +241,6 @@ VectorNd QRobot::Joint_PD_Controller(void){
 }
 
 VectorNd QRobot::Task_PD_Controller(void){
-	//VectorNd Task_PD(12);
 	VectorNd Task_PD=VectorNd::Zero(12);
 
 	Matrix3d I=Matrix3d::Ones();
@@ -252,11 +249,46 @@ VectorNd QRobot::Task_PD_Controller(void){
 	VectorNd tmp_FL_F=VectorNd::Zero(3);
 	VectorNd tmp_FR_F=VectorNd::Zero(3);
 
+	VectorNd tmp_RL_F2=VectorNd::Zero(3);
+	VectorNd tmp_RR_F2=VectorNd::Zero(3);
+	VectorNd tmp_FL_F2=VectorNd::Zero(3);
+	VectorNd tmp_FR_F2=VectorNd::Zero(3);
 
-    tmp_RL_F=RL.kp*(RL.local.pos.ref-RL.local.pos.now)+RL.kd*(RL.local.vel.ref-RL.local.vel.now);
-    tmp_RR_F=RR.kp*(RR.local.pos.ref-RR.local.pos.now)+RR.kd*(RR.local.vel.ref-RR.local.vel.now);
-    tmp_FL_F=FL.kp*(FL.local.pos.ref-FL.local.pos.now)+FL.kd*(FL.local.vel.ref-FL.local.vel.now);
-    tmp_FR_F=FR.kp*(FR.local.pos.ref-FR.local.pos.now)+FR.kd*(FR.local.vel.ref-FR.local.vel.now);
+	Base.pos.ref=getBASEpos(CoM.pos.ref, CoM.ori.euler.R.ref);
+	Base.vel.ref=CoM.vel.ref;
+
+	/************************************************************/
+	RL.local.semi.pos.now=CoM.ori.euler.R.now*RL.local.pos.now;
+	RR.local.semi.pos.now=CoM.ori.euler.R.now*RR.local.pos.now;
+	FL.local.semi.pos.now=CoM.ori.euler.R.now*FL.local.pos.now;
+	FR.local.semi.pos.now=CoM.ori.euler.R.now*FR.local.pos.now;
+
+	RL.local.semi.vel.now=CoM.ori.euler.R.now*RL.local.vel.now;
+	RR.local.semi.vel.now=CoM.ori.euler.R.now*RR.local.vel.now;
+	FL.local.semi.vel.now=CoM.ori.euler.R.now*FL.local.vel.now;
+	FR.local.semi.vel.now=CoM.ori.euler.R.now*FR.local.vel.now;
+
+	/************************************************************/
+	RL.local.semi.pos.ref=RL.global.pos.ref-Base.pos.ref;
+	RR.local.semi.pos.ref=RR.global.pos.ref-Base.pos.ref;
+	FL.local.semi.pos.ref=FL.global.pos.ref-Base.pos.ref;
+	FR.local.semi.pos.ref=FR.global.pos.ref-Base.pos.ref;
+
+	RL.local.semi.vel.ref=RL.global.vel.ref-Base.vel.ref;
+	RR.local.semi.vel.ref=RR.global.vel.ref-Base.vel.ref;
+	FL.local.semi.vel.ref=FL.global.vel.ref-Base.vel.ref;
+	FR.local.semi.vel.ref=FR.global.vel.ref-Base.vel.ref;
+
+	/************************************************************/
+	tmp_RL_F=CoM.ori.euler.R.ref.transpose()*(RL.kp*(RL.local.semi.pos.ref-RL.local.semi.pos.now)+RL.kd*(RL.local.semi.vel.ref-RL.local.semi.vel.now));
+	tmp_RR_F=CoM.ori.euler.R.ref.transpose()*(RR.kp*(RR.local.semi.pos.ref-RR.local.semi.pos.now)+RR.kd*(RR.local.semi.vel.ref-RR.local.semi.vel.now));
+	tmp_FL_F=CoM.ori.euler.R.ref.transpose()*(FL.kp*(FL.local.semi.pos.ref-FL.local.semi.pos.now)+FL.kd*(FL.local.semi.vel.ref-FL.local.semi.vel.now));
+	tmp_FR_F=CoM.ori.euler.R.ref.transpose()*(FR.kp*(FR.local.semi.pos.ref-FR.local.semi.pos.now)+FR.kd*(FR.local.semi.vel.ref-FR.local.semi.vel.now));
+    // tmp_RL_F=RL.kp*(RL.local.pos.ref-RL.local.pos.now)+RL.kd*(RL.local.vel.ref-RL.local.vel.now);
+    // tmp_RR_F=RR.kp*(RR.local.pos.ref-RR.local.pos.now)+RR.kd*(RR.local.vel.ref-RR.local.vel.now);
+    // tmp_FL_F=FL.kp*(FL.local.pos.ref-FL.local.pos.now)+FL.kd*(FL.local.vel.ref-FL.local.vel.now);
+    // tmp_FR_F=FR.kp*(FR.local.pos.ref-FR.local.pos.now)+FR.kd*(FR.local.vel.ref-FR.local.vel.now);
+	
 
     // cout<<tmp_RL_F.transpose()<<endl;
     // cout<<tmp_RR_F.transpose()<<endl;
@@ -359,55 +391,171 @@ void QRobot::Init_Pose_Traj(void){
 	}
 }
 
+// void QRobot::WalkReady_Pose_Traj(void){
+// 	Traj.ready.cycle=2.0;
+// 	if(Traj.cnt==0){
+// 			RL.local.pos.init=RL.local.pos.now;
+// 			RR.local.pos.init=RR.local.pos.now;
+// 			FL.local.pos.init=FL.local.pos.now;
+// 			FR.local.pos.init=FR.local.pos.now;
+
+// 			RL.local.pos.goal<<-0.35,0.22,-Base.pos.ref(2);
+// 			RR.local.pos.goal<<-0.35,-0.22,-Base.pos.ref(2);
+// 			FL.local.pos.goal<<0.35,0.22,-Base.pos.ref(2);
+// 			FR.local.pos.goal<<0.35,-0.22,-Base.pos.ref(2);
+
+// 			RL.local.pos.ref=RL.local.pos.init;
+// 			RR.local.pos.ref=RR.local.pos.init;
+// 			FL.local.pos.ref=FL.local.pos.init;
+// 			FR.local.pos.ref=FR.local.pos.init;
+// 		Traj.cnt++;
+// 	}else if(Traj.cnt<Traj.ready.cycle/dt){
+// 			RL.local.pos.ref=RL.local.pos.init+(RL.local.pos.goal-RL.local.pos.init)/2.0*(1-cos(PI/Traj.ready.cycle*Traj.cnt*dt));
+// 			RR.local.pos.ref=RR.local.pos.init+(RR.local.pos.goal-RR.local.pos.init)/2.0*(1-cos(PI/Traj.ready.cycle*Traj.cnt*dt));
+// 			FL.local.pos.ref=FL.local.pos.init+(FL.local.pos.goal-FL.local.pos.init)/2.0*(1-cos(PI/Traj.ready.cycle*Traj.cnt*dt));
+// 			FR.local.pos.ref=FR.local.pos.init+(FR.local.pos.goal-FR.local.pos.init)/2.0*(1-cos(PI/Traj.ready.cycle*Traj.cnt*dt));
+			
+// 			RL.local.vel.ref=PI/Traj.ready.cycle*(RL.local.pos.goal-RL.local.pos.init)/2.0*(sin(PI/Traj.ready.cycle*Traj.cnt*dt));
+// 			RR.local.vel.ref=PI/Traj.ready.cycle*(RR.local.pos.goal-RR.local.pos.init)/2.0*(sin(PI/Traj.ready.cycle*Traj.cnt*dt));
+// 			FL.local.vel.ref=PI/Traj.ready.cycle*(FL.local.pos.goal-FL.local.pos.init)/2.0*(sin(PI/Traj.ready.cycle*Traj.cnt*dt));
+// 			FR.local.vel.ref=PI/Traj.ready.cycle*(FR.local.pos.goal-FR.local.pos.init)/2.0*(sin(PI/Traj.ready.cycle*Traj.cnt*dt));
+
+// 		Traj.cnt++;
+// 	}else{
+// 			RL.local.pos.ref=RL.local.pos.goal;
+// 			RR.local.pos.ref=RR.local.pos.goal;
+// 			FL.local.pos.ref=FL.local.pos.goal;
+// 			FR.local.pos.ref=FR.local.pos.goal;
+			
+// 			RL.local.vel.ref<<0.,0.,0.;
+// 			RR.local.vel.ref<<0.,0.,0.;
+// 			FL.local.vel.ref<<0.,0.,0.;
+// 			FR.local.vel.ref<<0.,0.,0.;
+// 	}
+
+// 	// if(Traj.cnt<=Traj.ready.cycle/dt){
+// 	// 	cout<<"RL:"<<RL.local.pos.ref.transpose()<<endl;
+// 	// 	cout<<"RR:"<<RR.local.pos.ref.transpose()<<endl;
+// 	// 	cout<<"FL:"<<FL.local.pos.ref.transpose()<<endl;
+// 	// 	cout<<"FR:"<<FR.local.pos.ref.transpose()<<endl;
+// 	// 	cout<<"-----"<<endl;	
+// 	// }
+// }
+
+
 void QRobot::WalkReady_Pose_Traj(void){
 	Traj.ready.cycle=2.0;
 	if(Traj.cnt==0){
-		for(int i=0;i<nDOF;i++){
-			RL.local.pos.init=RL.local.pos.now;
-			RR.local.pos.init=RR.local.pos.now;
-			FL.local.pos.init=FL.local.pos.now;
-			FR.local.pos.init=FR.local.pos.now;
+		CoM.pos.init=-(RL.local.pos.now+RR.local.pos.now+FL.local.pos.now+FR.local.pos.now)/4.0;
+		CoM.pos.goal<<0.0,0.0,0.45;
+		CoM.pos.ref=CoM.pos.init;
+		Base.pos.init=getBASEpos(CoM.pos.init, CoM.ori.euler.R.now);
+		CoM.vel.ref<<0.0,0.0,0.0;
 
-			RL.local.pos.goal<<-0.35,0.22,-Base.pos.ref(2);
-			RR.local.pos.goal<<-0.35,-0.22,-Base.pos.ref(2);
-			FL.local.pos.goal<<0.35,0.22,-Base.pos.ref(2);
-			FR.local.pos.goal<<0.35,-0.22,-Base.pos.ref(2);
+		//*******************************************************************//
+		RL.global.pos.init=Base.pos.init+CoM.ori.euler.R.now*RL.local.pos.now;
+		RR.global.pos.init=Base.pos.init+CoM.ori.euler.R.now*RR.local.pos.now;
+		FL.global.pos.init=Base.pos.init+CoM.ori.euler.R.now*FL.local.pos.now;
+		FR.global.pos.init=Base.pos.init+CoM.ori.euler.R.now*FR.local.pos.now;
 
-			RL.local.pos.ref=RL.local.pos.init;
-			RR.local.pos.ref=RR.local.pos.init;
-			FL.local.pos.ref=FL.local.pos.init;
-			FR.local.pos.ref=FR.local.pos.init;
-		}
+		RL.global.pos.goal<<-0.35,0.22,0.0;
+		RR.global.pos.goal<<-0.35,-0.22,0.0;
+		FL.global.pos.goal<<0.35,0.22,0.0;
+		FR.global.pos.goal<<0.35,-0.22,0.0;
+
+		RL.global.pos.ref=RL.global.pos.init;
+		RR.global.pos.ref=RR.global.pos.init;
+		FL.global.pos.ref=FL.global.pos.init;
+		FR.global.pos.ref=FR.global.pos.init;
+
+		RL.global.vel.ref<<0.,0.,0.;
+		RR.global.vel.ref<<0.,0.,0.;
+		FL.global.vel.ref<<0.,0.,0.;
+		FR.global.vel.ref<<0.,0.,0.;
+
 		Traj.cnt++;
 	}else if(Traj.cnt<Traj.ready.cycle/dt){
-			RL.local.pos.ref=RL.local.pos.init+(RL.local.pos.goal-RL.local.pos.init)/2.0*(1-cos(PI/Traj.ready.cycle*Traj.cnt*dt));
-			RR.local.pos.ref=RR.local.pos.init+(RR.local.pos.goal-RR.local.pos.init)/2.0*(1-cos(PI/Traj.ready.cycle*Traj.cnt*dt));
-			FL.local.pos.ref=FL.local.pos.init+(FL.local.pos.goal-FL.local.pos.init)/2.0*(1-cos(PI/Traj.ready.cycle*Traj.cnt*dt));
-			FR.local.pos.ref=FR.local.pos.init+(FR.local.pos.goal-FR.local.pos.init)/2.0*(1-cos(PI/Traj.ready.cycle*Traj.cnt*dt));
-			
-			RL.local.vel.ref=PI/Traj.ready.cycle*(RL.local.pos.goal-RL.local.pos.init)/2.0*(sin(PI/Traj.ready.cycle*Traj.cnt*dt));
-			RR.local.vel.ref=PI/Traj.ready.cycle*(RR.local.pos.goal-RR.local.pos.init)/2.0*(sin(PI/Traj.ready.cycle*Traj.cnt*dt));
-			FL.local.vel.ref=PI/Traj.ready.cycle*(FL.local.pos.goal-FL.local.pos.init)/2.0*(sin(PI/Traj.ready.cycle*Traj.cnt*dt));
-			FR.local.vel.ref=PI/Traj.ready.cycle*(FR.local.pos.goal-FR.local.pos.init)/2.0*(sin(PI/Traj.ready.cycle*Traj.cnt*dt));
+		CoM.pos.ref=CoM.pos.init+(CoM.pos.goal-CoM.pos.init)/2.0*(1-cos(PI/Traj.ready.cycle*Traj.cnt*dt));
+		CoM.vel.ref=PI/Traj.ready.cycle*(CoM.pos.goal-CoM.pos.init)/2.0*(sin(PI/Traj.ready.cycle*Traj.cnt*dt));
 
+		RL.global.pos.ref=RL.global.pos.init+(RL.global.pos.goal-RL.global.pos.init)/2.0*(1-cos(PI/Traj.ready.cycle*Traj.cnt*dt));
+		RR.global.pos.ref=RR.global.pos.init+(RR.global.pos.goal-RR.global.pos.init)/2.0*(1-cos(PI/Traj.ready.cycle*Traj.cnt*dt));
+		FL.global.pos.ref=FL.global.pos.init+(FL.global.pos.goal-FL.global.pos.init)/2.0*(1-cos(PI/Traj.ready.cycle*Traj.cnt*dt));
+		FR.global.pos.ref=FR.global.pos.init+(FR.global.pos.goal-FR.global.pos.init)/2.0*(1-cos(PI/Traj.ready.cycle*Traj.cnt*dt));
+
+		RL.global.vel.ref=PI/Traj.ready.cycle*(RL.global.pos.goal-RL.global.pos.init)/2.0*(sin(PI/Traj.ready.cycle*Traj.cnt*dt));
+		RR.global.vel.ref=PI/Traj.ready.cycle*(RR.global.pos.goal-RR.global.pos.init)/2.0*(sin(PI/Traj.ready.cycle*Traj.cnt*dt));
+		FL.global.vel.ref=PI/Traj.ready.cycle*(FL.global.pos.goal-FL.global.pos.init)/2.0*(sin(PI/Traj.ready.cycle*Traj.cnt*dt));
+		FR.global.vel.ref=PI/Traj.ready.cycle*(FR.global.pos.goal-FR.global.pos.init)/2.0*(sin(PI/Traj.ready.cycle*Traj.cnt*dt));
 		Traj.cnt++;
 	}else{
-			RL.local.pos.ref=RL.local.pos.goal;
-			RR.local.pos.ref=RR.local.pos.goal;
-			FL.local.pos.ref=FL.local.pos.goal;
-			FR.local.pos.ref=FR.local.pos.goal;
+			CoM.pos.ref=CoM.pos.goal;
+			CoM.vel.ref<<0.0,0.0,0.0;
+
+			RL.global.pos.ref=RL.global.pos.goal;
+			RR.global.pos.ref=RR.global.pos.goal;
+			FL.global.pos.ref=FL.global.pos.goal;
+			FR.global.pos.ref=FR.global.pos.goal;
 			
-			RL.local.vel.ref<<0.,0.,0.;
-			RR.local.vel.ref<<0.,0.,0.;
-			FL.local.vel.ref<<0.,0.,0.;
-			FR.local.vel.ref<<0.,0.,0.;
+			RL.global.vel.ref<<0.,0.,0.;
+			RR.global.vel.ref<<0.,0.,0.;
+			FL.global.vel.ref<<0.,0.,0.;
+			FR.global.vel.ref<<0.,0.,0.;
+
+			Traj.move_done_flag=true;
 	}
 
-	// if(Traj.cnt<=Traj.ready.cycle/dt){
-	// 	cout<<"RL:"<<RL.local.pos.ref.transpose()<<endl;
-	// 	cout<<"RR:"<<RR.local.pos.ref.transpose()<<endl;
-	// 	cout<<"FL:"<<FL.local.pos.ref.transpose()<<endl;
-	// 	cout<<"FR:"<<FR.local.pos.ref.transpose()<<endl;
-	// 	cout<<"-----"<<endl;	
-	// }
+	if(Traj.cnt<=Traj.ready.cycle/dt){
+		cout<<"CoM:"<<CoM.pos.ref.transpose()<<endl;
+		cout<<"RL:"<<RL.global.pos.ref.transpose()<<endl;
+		cout<<"RR:"<<RR.global.pos.ref.transpose()<<endl;
+		cout<<"FL:"<<FL.global.pos.ref.transpose()<<endl;
+		cout<<"FR:"<<FR.global.pos.ref.transpose()<<endl;
+		cout<<"-----"<<endl;	
+	}
+}
+
+
+void QRobot::getRotationMatrix(void){
+	CoM.ori.euler.R.roll.now<<1,0,0\
+    							,0,cos(CoM.ori.euler.pos.now(0)),-sin(CoM.ori.euler.pos.now(0))\
+    							,0,sin(CoM.ori.euler.pos.now(0)),cos(CoM.ori.euler.pos.now(0));
+
+	CoM.ori.euler.R.pitch.now<<cos(CoM.ori.euler.pos.now(1)),0,sin(CoM.ori.euler.pos.now(1))\
+    							,0,1,0\
+    							,-sin(CoM.ori.euler.pos.now(1)),0,cos(CoM.ori.euler.pos.now(1));
+
+   CoM.ori.euler.R.yaw.now<<cos(CoM.ori.euler.pos.ref(2)),-sin(CoM.ori.euler.pos.ref(2)),0\
+    							,sin(CoM.ori.euler.pos.ref(2)),cos(CoM.ori.euler.pos.ref(2)),0\
+    							,0,0,1;
+
+   CoM.ori.euler.R.now=CoM.ori.euler.R.yaw.now*CoM.ori.euler.R.pitch.now*CoM.ori.euler.R.roll.now;
+
+	/**************************************************************************************************************/
+   CoM.ori.euler.R.roll.ref<<1,0,0\
+    							,0,cos(CoM.ori.euler.pos.ref(0)),-sin(CoM.ori.euler.pos.ref(0))\
+    							,0,sin(CoM.ori.euler.pos.ref(0)),cos(CoM.ori.euler.pos.ref(0));
+
+	CoM.ori.euler.R.pitch.ref<<cos(CoM.ori.euler.pos.ref(1)),0,sin(CoM.ori.euler.pos.ref(1))\
+    							,0,1,0\
+    							,-sin(CoM.ori.euler.pos.ref(1)),0,cos(CoM.ori.euler.pos.ref(1));
+
+   CoM.ori.euler.R.yaw.ref<<cos(CoM.ori.euler.pos.ref(2)),-sin(CoM.ori.euler.pos.ref(2)),0\
+    							,sin(CoM.ori.euler.pos.ref(2)),cos(CoM.ori.euler.pos.ref(2)),0\
+    							,0,0,1;
+
+   CoM.ori.euler.R.ref=CoM.ori.euler.R.yaw.ref*CoM.ori.euler.R.pitch.ref*CoM.ori.euler.R.roll.ref;
+}
+
+VectorNd QRobot::getCOMpos(VectorNd _Base_Pos, MatrixNd C_WB) {
+    VectorNd Com_Pos(3);
+    
+    Com_Pos = _Base_Pos + C_WB*offset_B2C;
+    return Com_Pos;
+}
+
+VectorNd QRobot::getBASEpos(VectorNd _Com_Pos, MatrixNd C_WB) {
+    VectorNd Base_Pos(3);
+    Base_Pos = _Com_Pos - C_WB*offset_B2C;
+    return Base_Pos;
 }
