@@ -11,6 +11,7 @@
 
 #include <std_msgs/Float64MultiArray.h>
 #include <std_msgs/UInt16.h>
+#include <std_msgs/String.h>
 #include "QRobot.h" 
 
 
@@ -67,6 +68,8 @@ namespace gazebo
 	ros::Publisher P_data;
 	std_msgs::Float64MultiArray m_data;
 	ros::Subscriber server_sub;
+	ros::Subscriber sub_gui;
+	ros::Publisher pub_gui;
 
 	QRobot Qbot;
 	
@@ -82,8 +85,8 @@ namespace gazebo
 	void IMUSensorRead(void);
 	void jointController(void);
 	void Callback(const std_msgs::UInt16 &msg);
-	
-
+	void GUICallback(const std_msgs::UInt16 &msg);
+	void ROSMsgPub();
 	private :
  };
  GZ_REGISTER_MODEL_PLUGIN(qrobot_plugin);
@@ -290,16 +293,49 @@ void gazebo::qrobot_plugin::UpdateAlgorithm(void)
 	}
 
 	jointController();
+	ROSMsgPub();
 }
 
 void gazebo::qrobot_plugin::Callback(const std_msgs::UInt16 &msg){
-	if(msg.data==0){
+	if(msg.data==2){
 		if(Qbot.Traj.move_done_flag==true){
 			Qbot.ControlMode=CTRLMODE_WALK_READY;
 		}
 	}
 }
 
+void gazebo::qrobot_plugin::GUICallback(const std_msgs::UInt16 &msg){
+	if(msg.data==0){
+		// if(Qbot.Traj.move_done_flag==true){
+		// 	Qbot.ControlMode=CTRLMODE_WALK_READY;
+		// }
+		printf("NONE\n");
+	}else if(msg.data==1){
+		if(Qbot.Traj.move_done_flag==true){
+			Qbot.ControlMode=CTRLMODE_INIT_POSE;
+		}
+		printf("Init\n");
+	}else if(msg.data==2){
+		if(Qbot.Traj.move_done_flag==true){
+			Qbot.ControlMode=CTRLMODE_WALK_READY;
+		}
+		printf("Ready\n");	
+	}
+}
+
 void gazebo::qrobot_plugin::InitROSCOMM(){
 	    server_sub = nh.subscribe("/Mode", 1, &gazebo::qrobot_plugin::Callback, this);
+	    sub_gui = nh.subscribe("ROSGUI_PUB_MODE", 1, &gazebo::qrobot_plugin::GUICallback, this);
+	    pub_gui=nh.advertise<std_msgs::UInt16>("ROSGUI_SUB_MODE",1000);
+}
+
+void gazebo::qrobot_plugin::ROSMsgPub(){
+	std_msgs::UInt16 msg;
+
+	if(Qbot.CommandFlag==GOTO_INIT_POSE){
+		msg.data=1;
+	}else if(Qbot.CommandFlag==GOTO_WALK_READY){
+		msg.data=2;
+	} 
+	pub_gui.publish(msg);
 }

@@ -42,9 +42,6 @@ ${GAZEBO_INCLUDE_DIRS}
 ${RBDL_INCLUDE_DIR} 
 ${EIGEN3_INCLUDE_DIR}
 ${PCL_LIBRARY_DIRS}
-#/home/hyunseok/RBDL/include
-#/home/hyunseok/RBDL/build/include
-#src
 )
 
 LINK_DIRECTORIES(
