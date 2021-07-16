@@ -10,10 +10,10 @@
 #include <iostream>
 
 #include <std_msgs/Float64MultiArray.h>
+#include <std_msgs/Float32MultiArray.h>
 #include <std_msgs/UInt16.h>
 #include <std_msgs/String.h>
 #include "QRobot.h" 
-
 
 Model* qbot_model=new Model();
 
@@ -22,7 +22,6 @@ namespace gazebo
 {
  class qrobot_plugin:public ModelPlugin
  {
- 	
 	physics::ModelPtr model;
 
 	physics::LinkPtr BODY;
@@ -65,11 +64,14 @@ namespace gazebo
 
 	event::ConnectionPtr update_connection;
 	ros::NodeHandle nh;
-	ros::Publisher P_data;
+	
 	std_msgs::Float64MultiArray m_data;
 	ros::Subscriber server_sub;
-	ros::Subscriber sub_gui;
-	ros::Publisher pub_gui;
+	ros::Subscriber sub_gui_mode;
+	ros::Subscriber sub_gui_joy;
+
+	ros::Publisher pub_data;
+	ros::Publisher pub_gui_mode;
 
 	QRobot Qbot;
 	
@@ -85,8 +87,10 @@ namespace gazebo
 	void IMUSensorRead(void);
 	void jointController(void);
 	void Callback(const std_msgs::UInt16 &msg);
-	void GUICallback(const std_msgs::UInt16 &msg);
-	void ROSMsgPub();
+	void GUICallback_Mode(const std_msgs::UInt16 &msg);
+	void GUICallback_Joy(const std_msgs::Float32MultiArray::ConstPtr &msg);
+	void ROSMsgPub2GUI();
+	void ROSMsgPub2RQT();
 	private :
  };
  GZ_REGISTER_MODEL_PLUGIN(qrobot_plugin);
@@ -145,7 +149,7 @@ void gazebo::qrobot_plugin::SensorSetting(){
 }
 
 void gazebo::qrobot_plugin::RBDLSetting(){
-	Addons::URDFReadFromFile("/home/hyunseok/catkin_ws/src/quadruped_robot/quadruped_robot_description/urdf/quadruped_robot.urdf", qbot_model, true, true);
+	Addons::URDFReadFromFile(Qbot.filepath.URDF.c_str(), qbot_model, true, true);
     Qbot.setRobotModel(qbot_model);
 }
 
@@ -183,10 +187,10 @@ void gazebo::qrobot_plugin::IMUSensorRead()
     Qbot.CoM.ori.euler.vel.now(1) = this->IMU->AngularVelocity(false)[1];
     Qbot.CoM.ori.euler.vel.now(2) = this->IMU->AngularVelocity(false)[2];
     Qbot.CoM.ori.euler.pos.now = Qbot.CoM.ori.euler.pos.now + Qbot.CoM.ori.euler.vel.now*dt;
-    
-    Qbot.CoM.acc.now(0) =this->IMU->LinearAcceleration(false)[0];
-    Qbot.CoM.acc.now(1) =this->IMU->LinearAcceleration(false)[1];
-    Qbot.CoM.acc.now(2) =this->IMU->LinearAcceleration(false)[2];
+
+    Qbot.CoM.local.acc.now(0) =this->IMU->LinearAcceleration(false)[0];
+    Qbot.CoM.local.acc.now(1) =this->IMU->LinearAcceleration(false)[1];
+    Qbot.CoM.local.acc.now(2) =this->IMU->LinearAcceleration(false)[2];
 
     Qbot.getRotationMatrix();
 
@@ -243,8 +247,8 @@ void gazebo::qrobot_plugin::Load(physics::ModelPtr _model, sdf::ElementPtr /*_sd
     SensorSetting();
     RBDLSetting();
     InitROSCOMM();
-    P_data = nh.advertise<std_msgs::Float64MultiArray>("ROS_DATA", 1);
-    m_data.data.resize(10);
+    
+    
     this->update_connection = event::Events::ConnectWorldUpdateBegin(boost::bind(&qrobot_plugin::UpdateAlgorithm, this));
 }
 
@@ -254,7 +258,6 @@ void gazebo::qrobot_plugin::UpdateAlgorithm(void)
 	EncoderRead();
 	IMUSensorRead();
 	
-
 	switch (Qbot.ControlMode){
 		case CTRLMODE_NONE:
 		
@@ -262,15 +265,22 @@ void gazebo::qrobot_plugin::UpdateAlgorithm(void)
 
 		case CTRLMODE_INIT_POSE:
 			printf("CTRLMODE_INIT_POSE\n");
-			Qbot.ResetTraj();
+			Qbot.resetTrajPram();
 			Qbot.CommandFlag=GOTO_INIT_POSE;
 			Qbot.ControlMode=CTRLMODE_NONE;
 		break;
 
 		case CTRLMODE_WALK_READY:
 			printf("CTRLMODE_HOME_POSE\n");
-			Qbot.ResetTraj();
+			Qbot.resetTrajPram();
 			Qbot.CommandFlag=GOTO_WALK_READY;
+			Qbot.ControlMode=CTRLMODE_NONE;
+		break;
+
+		case CTRLMODE_SLOW_WALK:
+			printf("CTRLMODE_SLOW_WALK\n");
+			Qbot.resetTrajPram();
+			Qbot.CommandFlag=GOTO_SLOW_WALK;
 			Qbot.ControlMode=CTRLMODE_NONE;
 		break;
 	}
@@ -290,52 +300,111 @@ void gazebo::qrobot_plugin::UpdateAlgorithm(void)
 			Qbot.WalkReady_Pose_Traj();
 			Qbot.ComputeTorqueControl();
 		break;
+
+		case GOTO_SLOW_WALK:
+			Qbot.StateUpdate();
+			Qbot.Slow_Walk_Traj();
+			Qbot.ComputeTorqueControl();
+		break;
 	}
 
 	jointController();
-	ROSMsgPub();
+	ROSMsgPub2GUI();
+	ROSMsgPub2RQT();
 }
 
 void gazebo::qrobot_plugin::Callback(const std_msgs::UInt16 &msg){
 	if(msg.data==2){
-		if(Qbot.Traj.move_done_flag==true){
+		if(Qbot.Traj.moveState.done==true){
 			Qbot.ControlMode=CTRLMODE_WALK_READY;
 		}
 	}
 }
 
-void gazebo::qrobot_plugin::GUICallback(const std_msgs::UInt16 &msg){
+
+void gazebo::qrobot_plugin::GUICallback_Mode(const std_msgs::UInt16 &msg){
 	if(msg.data==0){
 		// if(Qbot.Traj.move_done_flag==true){
 		// 	Qbot.ControlMode=CTRLMODE_WALK_READY;
 		// }
 		printf("NONE\n");
 	}else if(msg.data==1){
-		if(Qbot.Traj.move_done_flag==true){
+		if(Qbot.Traj.moveState.done==true){
 			Qbot.ControlMode=CTRLMODE_INIT_POSE;
+			printf("Init\n");
 		}
-		printf("Init\n");
+		
 	}else if(msg.data==2){
-		if(Qbot.Traj.move_done_flag==true){
+		if(Qbot.Traj.moveState.done==true){
 			Qbot.ControlMode=CTRLMODE_WALK_READY;
+			printf("Ready\n");
 		}
-		printf("Ready\n");	
+			
+	}else if(msg.data==3){
+		if(Qbot.Traj.moveState.done==true){
+			Qbot.ControlMode=CTRLMODE_SLOW_WALK;
+			printf("Slow walk\n");
+		}
 	}
+}
+
+
+void gazebo::qrobot_plugin::GUICallback_Joy(const std_msgs::Float32MultiArray::ConstPtr &msg){
+	// int i = 0;
+	// float arr[3];
+	// cout<<msg->data.size()<<endl;
+
+	// for (int i=0;i<msg->data.size();++i){
+	// 	const std_msgs::Float32MultiArray &MSG=msg->data[i];
+	// 	cout<<MSG[0]<<endl;
+	// }
+	Qbot.joy.vel_x=msg->data[0];
+	Qbot.joy.vel_y=msg->data[1];
+	Qbot.joy.vel_yaw=msg->data[2];
+
+	// cout<<"vel[x]:"<<msg->data[0]<<endl;
+	// cout<<"vel[y]:"<<msg->data[1]<<endl;
+	// cout<<"vel[yaw]:"<<msg->data[2]<<endl;
+	// cout<<"-----"<<endl;
 }
 
 void gazebo::qrobot_plugin::InitROSCOMM(){
 	    server_sub = nh.subscribe("/Mode", 1, &gazebo::qrobot_plugin::Callback, this);
-	    sub_gui = nh.subscribe("ROSGUI_PUB_MODE", 1, &gazebo::qrobot_plugin::GUICallback, this);
-	    pub_gui=nh.advertise<std_msgs::UInt16>("ROSGUI_SUB_MODE",1000);
+	    sub_gui_mode = nh.subscribe("ROSGUI_PUB_MODE", 1, &gazebo::qrobot_plugin::GUICallback_Mode, this);
+	    sub_gui_joy = nh.subscribe("ROSGUI_PUB_JOY", 1, &gazebo::qrobot_plugin::GUICallback_Joy, this);
+	    pub_gui_mode=nh.advertise<std_msgs::UInt16>("ROSGUI_SUB_MODE",1000);
+	    pub_data = nh.advertise<std_msgs::Float64MultiArray>("/tmp_data/", 1);
+	    m_data.data.resize(10);
 }
 
-void gazebo::qrobot_plugin::ROSMsgPub(){
+void gazebo::qrobot_plugin::ROSMsgPub2GUI(){
 	std_msgs::UInt16 msg;
 
 	if(Qbot.CommandFlag==GOTO_INIT_POSE){
 		msg.data=1;
 	}else if(Qbot.CommandFlag==GOTO_WALK_READY){
 		msg.data=2;
-	} 
-	pub_gui.publish(msg);
+	}else if(Qbot.CommandFlag==GOTO_SLOW_WALK){
+		msg.data=3;
+	}
+
+	if(Qbot.)  
+	pub_gui_mode.publish(msg);
+}
+
+void gazebo::qrobot_plugin::ROSMsgPub2RQT(){
+	m_data.data[0]=Qbot.RL.global.pos.ref[0];
+	m_data.data[1]=Qbot.RR.global.pos.ref[0];
+	m_data.data[2]=Qbot.FL.global.pos.ref[0];
+	m_data.data[3]=Qbot.FR.global.pos.ref[0];
+
+	m_data.data[4]=Qbot.RL.global.pos.ref[2];
+	m_data.data[5]=Qbot.RR.global.pos.ref[2];
+	m_data.data[6]=Qbot.FL.global.pos.ref[2];
+	m_data.data[7]=Qbot.FR.global.pos.ref[2];
+	
+	m_data.data[8]=Qbot.Traj.walk.zmp.X_new(0,0);
+	m_data.data[9]=Qbot.Traj.walk.zmp.X_new(0,1);
+
+	pub_data.publish(m_data);
 }

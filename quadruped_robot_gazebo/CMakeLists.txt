@@ -52,8 +52,9 @@ ${GAZEBO_LIBRARY_DIRS}
 list(
 APPEND CMAKE_CXX_FLAGS "${GAZEBO_CXX_FLAGS}"
 )
+SET(SRC src/plugin.cpp src/QRobot.cpp src/QuadProgpp/Array.cc src/QuadProgpp/QuadProg++.cc)
 
-add_library(plugin SHARED src/plugin.cpp src/QRobot.cpp)
+add_library(plugin SHARED ${SRC})
 
 target_link_libraries(plugin ${GAZEBO_LIBRARIES} ${catkin_LIBRARIES} ${RBDL_LIBRARY} ${RBDL_URDFReader_LIBRARY})
 
