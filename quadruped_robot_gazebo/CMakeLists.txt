@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_ros
   roscpp
   std_msgs
+  sensor_msgs
 )
 
 catkin_package(
@@ -52,7 +53,7 @@ ${GAZEBO_LIBRARY_DIRS}
 list(
 APPEND CMAKE_CXX_FLAGS "${GAZEBO_CXX_FLAGS}"
 )
-SET(SRC src/plugin.cpp src/QRobot.cpp src/QuadProgpp/Array.cc src/QuadProgpp/QuadProg++.cc)
+SET(SRC src/plugin.cpp src/QRobot.cpp src/QuadProgpp/Array.cc src/QuadProgpp/QuadProg++.cc src/robot_state.cpp src/trajectory.cpp src/controller.cpp src/common.cpp src/joystick.cc)
 
 add_library(plugin SHARED ${SRC})
 

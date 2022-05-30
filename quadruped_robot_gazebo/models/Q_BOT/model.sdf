@@ -1,9 +1,9 @@
 <sdf version='1.6'>
   <model name='qbot'>
-     <!--joint name="fixed to ground" type="fixed">
+     <joint name="fixed to ground" type="fixed">
        <parent>world</parent>
        <child>BODY</child>
-     </joint-->
+     </joint>
 
     <link name='BODY'>
       <pose frame=''>0 0 0 0 -0 0</pose>

@@ -9,6 +9,10 @@
         <arg name="verbose" value="true"/>
         <arg name="world_name" value="$(find quadruped_robot_gazebo)/worlds/default.world"/>
     </include>
+   
+    <node name='ds4' pkg='joy' type='joy_node' args="">
+        <param name='dev' type='string' value='/dev/input/js0'/>
+    </node>
 
     <!--node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
             args="-urdf -model qbot -param robot_description -z 1.0"/-->
